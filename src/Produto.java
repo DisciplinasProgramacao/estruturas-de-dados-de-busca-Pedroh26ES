@@ -66,12 +66,10 @@ public abstract class Produto implements Comparable<Produto>{
      * [NOME]: R$ [VALOR DE VENDA]
      */
     @Override
-	public String toString() {
-    	
-    	NumberFormat moeda = NumberFormat.getCurrencyInstance();
-    	
-		return String.format("IDENTIFICADOR: " + idProduto + " NOME: " + descricao + ": " + moeda.format(valorDeVenda()));
-	}
+    public String toString() {
+        return String.format("IDENTIFICADOR: %d NOME: %s: R$ %.2f", 
+                            idProduto, descricao, valorDeVenda());
+    }
     
     @Override
     /**

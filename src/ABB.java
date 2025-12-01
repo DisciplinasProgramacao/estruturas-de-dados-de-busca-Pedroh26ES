@@ -133,9 +133,39 @@ public class ABB<K, V> implements IMapeamento<K, V>{
      * @return o tamanho atualizado da árvore após a execução da operação de inserção.
      */
     public int inserir(K chave, V item) {
-    	
-    	// TODO
+    	raiz = inserir(raiz, chave, item);
         return tamanho;
+    }
+    
+    /**
+     * Método recursivo auxiliar para inserção de itens na árvore.
+     * @param raizArvore raiz da árvore ou subárvore atual.
+     * @param chave chave do item a ser inserido.
+     * @param item item a ser inserido.
+     * @return referência à raiz da árvore/subárvore após a inserção.
+     */
+    private No<K, V> inserir(No<K, V> raizArvore, K chave, V item) {
+        
+        if (raizArvore == null) {
+            // Árvore vazia: cria um novo nó e incrementa o tamanho
+            tamanho++;
+            return new No<>(chave, item);
+        }
+        
+        int comparacao = comparador.compare(chave, raizArvore.getChave());
+        
+        if (comparacao < 0) {
+            // Chave menor: insere na subárvore esquerda
+            raizArvore.setEsquerda(inserir(raizArvore.getEsquerda(), chave, item));
+        } else if (comparacao > 0) {
+            // Chave maior: insere na subárvore direita
+            raizArvore.setDireita(inserir(raizArvore.getDireita(), chave, item));
+        } else {
+            // Chave já existe: atualiza o item
+            raizArvore.setItem(item);
+        }
+        
+        return raizArvore;
     }
 
     @Override 
@@ -149,9 +179,32 @@ public class ABB<K, V> implements IMapeamento<K, V>{
     }
 
     public String caminhamentoEmOrdem() {
-    	
-    	// TODO
-    	return null;
+    	return caminhamentoEmOrdem(raiz);
+    }
+    
+    /**
+     * Método recursivo auxiliar para realizar o caminhamento em ordem.
+     * @param raizArvore raiz da árvore ou subárvore atual.
+     * @return String com os itens da árvore em ordem.
+     */
+    private String caminhamentoEmOrdem(No<K, V> raizArvore) {
+        
+        if (raizArvore == null) {
+            return "";
+        }
+        
+        String resultado = "";
+        
+        // Percorre a subárvore esquerda
+        resultado += caminhamentoEmOrdem(raizArvore.getEsquerda());
+        
+        // Visita a raiz
+        resultado += raizArvore.getItem().toString() + "\n";
+        
+        // Percorre a subárvore direita
+        resultado += caminhamentoEmOrdem(raizArvore.getDireita());
+        
+        return resultado;
     }
 
     @Override
@@ -161,9 +214,72 @@ public class ABB<K, V> implements IMapeamento<K, V>{
      * @return o valor associado ao item removido.
      */
     public V remover(K chave) {
-    	
-    	// TODO
-    	return null;
+    	@SuppressWarnings("unchecked")
+        V[] itemRemovido = (V[]) new Object[1];
+        raiz = remover(raiz, chave, itemRemovido);
+        return itemRemovido[0];
+    }
+    
+    /**
+     * Método recursivo auxiliar para remoção de itens da árvore.
+     * @param raizArvore raiz da árvore ou subárvore atual.
+     * @param chave chave do item a ser removido.
+     * @param itemRemovido array auxiliar para retornar o item removido.
+     * @return referência à raiz da árvore/subárvore após a remoção.
+     */
+    private No<K, V> remover(No<K, V> raizArvore, K chave, V[] itemRemovido) {
+        
+        if (raizArvore == null) {
+            throw new NoSuchElementException("O item não foi localizado na árvore!");
+        }
+        
+        int comparacao = comparador.compare(chave, raizArvore.getChave());
+        
+        if (comparacao < 0) {
+            // Chave menor: remove da subárvore esquerda
+            raizArvore.setEsquerda(remover(raizArvore.getEsquerda(), chave, itemRemovido));
+        } else if (comparacao > 0) {
+            // Chave maior: remove da subárvore direita
+            raizArvore.setDireita(remover(raizArvore.getDireita(), chave, itemRemovido));
+        } else {
+            // Item encontrado: processa a remoção
+            itemRemovido[0] = raizArvore.getItem();
+            tamanho--;
+            
+            // Caso 1: Nó sem filhos ou com apenas um filho
+            if (raizArvore.getEsquerda() == null) {
+                return raizArvore.getDireita();
+            } else if (raizArvore.getDireita() == null) {
+                return raizArvore.getEsquerda();
+            }
+            
+            // Caso 2: Nó com dois filhos
+            // Encontra o menor nó da subárvore direita (sucessor)
+            No<K, V> sucessor = encontrarMenor(raizArvore.getDireita());
+            
+            // Substitui os dados do nó atual pelos dados do sucessor
+            raizArvore.setChave(sucessor.getChave());
+            raizArvore.setItem(sucessor.getItem());
+            
+            // Remove o sucessor da subárvore direita
+            @SuppressWarnings("unchecked")
+            V[] temp = (V[]) new Object[1];
+            raizArvore.setDireita(remover(raizArvore.getDireita(), sucessor.getChave(), temp));
+        }
+        
+        return raizArvore;
+    }
+    
+    /**
+     * Encontra o menor nó de uma subárvore (nó mais à esquerda).
+     * @param raizArvore raiz da subárvore.
+     * @return o menor nó da subárvore.
+     */
+    private No<K, V> encontrarMenor(No<K, V> raizArvore) {
+        while (raizArvore.getEsquerda() != null) {
+            raizArvore = raizArvore.getEsquerda();
+        }
+        return raizArvore;
     }
 
 	@Override
@@ -178,6 +294,6 @@ public class ABB<K, V> implements IMapeamento<K, V>{
 
 	@Override
 	public double getTempo() {
-		return (termino - inicio) / 1_000_000;
+		return (termino - inicio) / 1_000_000.0;
 	}
 }
